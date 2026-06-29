@@ -109,7 +109,7 @@ class SE_Semantic_Analyzer
 
         return null;
     }
-    public string? compatibility(string left, string right, string op)
+    public string compatibility(string left, string right, string op)
     {
         if (left == "string" && right == "string")
         {
@@ -122,7 +122,7 @@ class SE_Semantic_Analyzer
             else if (left == "int" && right == "int") { return "int"; }
             else if (right != "char" && left != "char") { return "float"; }
         }
-        return null;
+        return "";
     }
     public void createScope() { scope += 1; scopeStack.Add(scope); }
     public void destroyScope()

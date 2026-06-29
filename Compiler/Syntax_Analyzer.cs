@@ -9,6 +9,7 @@ public class Syntax_Analyzer
     List<Token> ptokens;
     int index = 0;
     bool bracktCheck = true;
+    string? exptype;
     public Syntax_Analyzer(List<Token> tokens)
     {
         this.rules = new Dictionary<string, List<string[]>>();
@@ -75,6 +76,13 @@ public class Syntax_Analyzer
                 String element = pr[j];
                 if (element[0] == '~') { ++index; return true; }
 
+                if (element == "<EXP_F>" || element == "<EXP_F>")
+                {
+                    Exp e = new Exp();
+                    RE(e);
+                    index++;
+                }
+
                 else if (element[0] == '<') { if (!helper(element)) { index = prev; break; } }
 
                 else if (element.Length == 1 && element[0] == 'E') continue;
@@ -105,6 +113,583 @@ public class Syntax_Analyzer
         }
         return false;
     }
+
+    public bool F(Exp exp)
+    {
+        if (tokens[index].class_Part == TokenType.SUPER
+        || tokens[index].class_Part == TokenType.SELF
+        || tokens[index].class_Part == TokenType.ID
+        || tokens[index].class_Part == TokenType.IC
+        || tokens[index].class_Part == TokenType.FC
+        || tokens[index].class_Part == TokenType.SC
+        || tokens[index].class_Part == TokenType.CC
+        || tokens[index].class_Part == TokenType.ORB
+        || tokens[index].class_Part == TokenType.CREATE)
+        {
+            if (tokens[index].class_Part == TokenType.SUPER || tokens[index].class_Part == TokenType.SELF || tokens[index].class_Part == TokenType.ID)
+            {
+                if (TS(exp))
+                {
+                    if (tokens[index].class_Part == TokenType.ID)
+                    {
+                            
+                        exp.setN(tokens[index].word);
+                        index++;
+                        if (O(exp))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            else if (tokens[index].class_Part == TokenType.ORB)
+            {
+                index++;
+                // Exp ex = new Exp();
+                if (exp(exp))
+                {
+                    if (tokens[index].class_Part == TokenType.CRB) {
+                        index++;
+                        return true;
+                    }
+                }
+            }
+            else if (tokens[index].class_Part == TokenType.CREATE)
+            {
+                if (obj_dec())
+                {
+                    if (O_(exp))
+                    {
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                if (Const(exp))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public bool Q_(Exp exp)
+    {
+        if (tokens[index].class_Part == TokenType.MDM)
+        {
+            exp.setOp(tokens[index].word);
+            index++;
+            Exp ex = new Exp();
+            if (F(ex))
+            {
+                String
+                 t3 = se.compatibility(exp.type, ex.type, exp.getOp());
+                exp.setT(t3);
+                if (Q_(exp))
+                {
+                    return true;
+                }
+            }
+        }
+        else if (tokens[index].class_Part == TokenType.PM
+        || tokens[index].class_Part == TokenType.COMP
+        || tokens[index].class_Part == TokenType.COM
+        || tokens[index].class_Part == TokenType.CRB
+        || tokens[index].class_Part == TokenType.CCB
+        || tokens[index].class_Part == TokenType.CSB
+        || tokens[index].class_Part == TokenType.SEC)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool Q(Exp exp)
+    {
+        if (tokens[index].class_Part == TokenType.SUPER
+        || tokens[index].class_Part == TokenType.SELF
+        || tokens[index].class_Part == TokenType.ID
+        || tokens[index].class_Part == TokenType.IC
+        || tokens[index].class_Part == TokenType.FC
+        || tokens[index].class_Part == TokenType.SC
+        || tokens[index].class_Part == TokenType.CC
+        || tokens[index].class_Part == TokenType.ORB
+        || tokens[index].class_Part == TokenType.CREATE)
+        {
+            if (F(exp))
+            {
+                if (Q_(exp))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public bool E_(Exp exp)
+    {
+        if (tokens[index].class_Part == TokenType.PM)
+        {
+            exp.setOp(tokens[index].word);
+            index++;
+            Exp ex = new Exp();
+            if (Q(ex))
+            {
+                String t3 = se.compatibility(exp.type, ex.type, exp.getOp());
+                exp.setT(t3);
+                if (E_(exp))
+                {
+                    return true;
+                }
+            }
+        }
+        else if (tokens[index].class_Part == TokenType.COM
+        || tokens[index].class_Part == TokenType.CRB
+        || tokens[index].class_Part == TokenType.CCB
+        || tokens[index].class_Part == TokenType.CSB
+        || tokens[index].class_Part == TokenType.SEC)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public bool E(Exp exp)
+    {
+        if (tokens[index].class_Part == TokenType.SUPER
+        || tokens[index].class_Part == TokenType.SELF
+        || tokens[index].class_Part == TokenType.ID
+        || tokens[index].class_Part == TokenType.IC
+        || tokens[index].class_Part == TokenType.FC
+        || tokens[index].class_Part == TokenType.SC
+        || tokens[index].class_Part == TokenType.CC
+        || tokens[index].class_Part == TokenType.ORB
+        || tokens[index].class_Part == TokenType.CREATE)
+        {
+            if (Q(exp))
+            {
+                if (E_(exp))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public bool RE_(Exp exp)
+    {
+        if (tokens[index].class_Part == TokenType.COMP)
+        {
+            exp.setOp(tokens[index].word);
+            index++;
+            Exp ex = new Exp();
+            if (E(ex))
+            {
+                exp.setT(se.compatibility(exp.type, ex.type, exp.getOp()));
+                if (RE_(exp))
+                {
+                    return true;
+                }
+            }
+        }
+        else if (tokens[index].class_Part == TokenType.COM
+        || tokens[index].class_Part == TokenType.CRB
+        || tokens[index].class_Part == TokenType.CCB
+        || tokens[index].class_Part == TokenType.CSB
+        || tokens[index].class_Part == TokenType.SEC)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    public bool RE(Exp exp)
+    {
+        if (ptokens[index].class_Part == TokenType.SUPER
+        || ptokens[index].class_Part == TokenType.SELF
+        || ptokens[index].class_Part == TokenType.ID
+        || ptokens[index].class_Part == TokenType.IC
+        || ptokens[index].class_Part == TokenType.FC
+        || ptokens[index].class_Part == TokenType.SC
+        || ptokens[index].class_Part == TokenType.CC
+        || ptokens[index].class_Part == TokenType.ORB
+        || ptokens[index].class_Part == TokenType.CREATE)
+        {
+
+            if (E(exp))
+            {
+                if (RE_(exp))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    public bool obj_dec() {
+        if (tokens[index].class_Part == TokenType.CREATE) {
+            index++;
+            if (tokens[index].class_Part == TokenType.ID) {
+                index++;
+                if (tokens[index].class_Part == TokenType.CRB) {
+                    index++;
+                    if (argu(null)) {
+                        if (tokens[index].class_Part == TokenType.ORB) {
+                            index++;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+ public bool O(Exp exp) {
+        if (tokens[index].class_Part == TokenType.OSB) {
+            index++;
+            Exp ex = new Exp();
+            if (exp(ex)) {
+                if (!ex.type.Equals("int")) {
+                    Console.WriteLine("Error at " + tokens[index].lineNo + "  index must be an integer value");
+                    Environment.Exit(0);
+                }
+                if (tokens[index].class_Part == TokenType.CSB) {
+                    index++;
+                    if (opt(exp)) {
+                        if (O_(exp)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } else if (tokens[index].class_Part == TokenType.CRB) {
+            index++;
+            Exp ex = new Exp();
+            if (argu(ex)) {
+                if (tokens[index].class_Part == TokenType.CCB) {
+                    exp.setT(ex.type);
+                    index++;
+                    if (exp.getR().Equals("") || exp.getR().Equals("self")) {
+                        SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, ex.type, se.curr_class_name);
+                        if (c != null) {
+                            String[] T = c.type.Split("->");
+                            exp.setT(T[1]);
+                        } else {
+                            Console.WriteLine("Error at " + tokens[index].lineNo + " Function not declare");
+                            Environment.Exit(0);
+                        }
+
+                    } else if (exp.getR().Equals("super")) {
+                        SE_Main_Data_Table? m = se.lookUpMainTable(se.curr_class_name);
+                        if (m.extends == null || m.extends.Equals("")) {
+                            Console.WriteLine("Current Class does not have parent class");
+                            Environment.Exit(0);
+                        } else {
+                            SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, exp.type, m.extends);
+                            if (c != null) {
+                                String[] T = c.type.Split("->");
+                                exp.setT(T[1]);
+                            } else {
+                                Console.WriteLine("Error at " + tokens[index].lineNo + "Function not declare");
+                                Environment.Exit(0);
+                            }
+                            
+                        }
+                    } else if (exp.getR().Equals("int") || exp.getR().Equals("float") || exp.getR().Equals("char")
+                            || exp.getR().Equals("String") || exp.getR().Equals("bool")) {
+                        Console.WriteLine("Error at " + tokens[index].lineNo + "Primitive data Type cant be instantiated");
+                        Environment.Exit(0);
+                    } else if (exp.getR().Equals("void")) {
+                        Console.WriteLine("Error at " + tokens[index].lineNo + "Return type is void");
+                        Environment.Exit(0);
+                    } else if (exp.getR().Equals("constructor") || exp.getR().Equals("None")) {
+                        SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, exp.type, exp.getR());
+                        if (c == null) {
+                            while (true) {
+                                SE_Main_Data_Table? m = se.lookUpMainTable(exp.getR());
+                                if (m == null) {
+                                    Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                                    Environment.Exit(0);
+                                } else if (m.extends == null || m.extends.Equals("")) {
+                                    Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                                    Environment.Exit(0);
+                                } else {
+                                    c = se.lookUpDataTable(exp.name, exp.type, m.extends);
+                                    if (c == null) {
+                                        exp.setR(m.extends);
+                                    } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                                        Console.WriteLine("Error at : " + tokens[index].lineNo + "private attribute or function cant be accessed outside the class");
+                                        Environment.Exit(0);
+                                    } else {
+                                        String[] Ty = c.type.Split("->");
+                                        exp.setT(Ty[1]);
+                                        break;
+                                    }
+
+                                }
+                            }
+                        } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                            Console.WriteLine("Error at : " + tokens[index].lineNo  + "private attribute or function cant be accessed outside the class");
+                            Environment.Exit(0);
+                        }
+                        String[] T = c.type.Split("->");
+                        exp.setT(T[1]);
+                    } else {
+                        SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, exp.type, exp.getR());
+                        if (c == null) {
+                            while (true) {
+                                SE_Main_Data_Table? m = se.lookUpMainTable(exp.getR());
+                                if (m == null) {
+                                    Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                                    Environment.Exit(0);
+                                } else if (m.extends == null || m.extends.Equals("")) {
+                                    Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                                    Environment.Exit(0);
+                                } else {
+                                    c = se.lookUpDataTable(exp.name, exp.type, m.extends);
+                                    if (c == null) {
+                                        exp.setR(m.extends);
+                                    } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                                        Console.WriteLine("Error at : " + tokens[index].lineNo + "private attribute or function cant be accessed outside the class");
+                                        Environment.Exit(0);
+                                    } else {
+                                        String[] T = c.type.Split("->");
+                                        exp.setT(T[1]);
+                                        break;
+                                    }
+
+                                }
+                            }
+                        } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                            Console.WriteLine("Error at : " + tokens[index].lineNo + " private attribute or function cant be accessed outside the class");
+                            Environment.Exit(0);
+                        }
+                        String[] T = c.type.Split("->");
+                        exp.setT(T[1]);
+                    }
+                    if (O_(exp)) {
+                        return true;
+                    }
+                }
+            }
+        } else if (tokens[index].class_Part == TokenType.DOT) {
+            if (exp.getR().Equals("")) {
+                String t = se.lookUpFuncTable(exp.name);
+                if (t != null) {
+                    exp.setT(t);
+                } else {
+                    SE_Main_Data_Table? m = se.lookUpMainTable(exp.name);
+                    if (m != null) {
+                        if (m.tm == null || !m.tm.Equals("static")) {
+                            Console.WriteLine("Error at : " + tokens[index].lineNo + " variable should be static");
+                            Environment.Exit(0);
+                        }
+                        exp.setR(m.name);
+                    } else {
+                        Console.WriteLine("Error at " + tokens[index].lineNo + ": Variable not declare ");
+                        Environment.Exit(0);
+                    }
+                }
+
+            } else if (exp.getR().Equals("self")) {
+                SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, se.curr_class_name);
+                if (c != null) {
+
+                    exp.setT(c.type);
+
+                } else {
+                    Console.WriteLine("Error at " + tokens[index].lineNo + ": Variable not declare ");
+                    Environment.Exit(0);
+                }
+            } else if (exp.getR().Equals("super")) {
+                SE_Main_Data_Table? m = se.lookUpMainTable(se.curr_class_name);
+                if (m.extends == null || m.extends.Equals("")) {
+                    Console.WriteLine("Current Class does not have parent class");
+                    Environment.Exit(0);
+                } else {
+                    SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, m.extends);
+                    if (c != null) {
+
+                        exp.setT(c.type);
+
+                    } else {
+                        Console.WriteLine("Error at " + tokens[index].lineNo + ": Variable not declare ");
+                        Environment.Exit(0);
+                    }
+                }
+            } else if (exp.getR().Equals("int") || exp.getR().Equals("float") || exp.getR().Equals("char")
+                    || exp.getR().Equals("String") || exp.getR().Equals("bool")) {
+                Console.WriteLine("Error at " + tokens[index].lineNo + "Primitive data Type cant be instantiated");
+                Environment.Exit(0);
+            } else if (exp.getR().Equals("void")) {
+                Console.WriteLine("Error at " + tokens[index].lineNo + "Return type is void");
+                Environment.Exit(0);
+            } else {
+                SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, exp.getR());
+                if (c == null) {
+                    while (true) {
+                        SE_Main_Data_Table? m = se.lookUpMainTable(exp.getR());
+                        if (m == null) {
+                            Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                            Environment.Exit(0);
+                        } else if (m.extends == null || m.extends.Equals("")) {
+                            Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                            Environment.Exit(0);
+                        } else {
+                            c = se.lookUpDataTable(exp.name, m.extends);
+                            if (c == null) {
+                                exp.setR(m.extends);
+                            } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                                Console.WriteLine("Error at : " + tokens[index].lineNo + "private attribute or function cant be accessed outside the class");
+                                Environment.Exit(0);
+                            } else {
+                                exp.setT(c.type);
+                                break;
+                            }
+
+                        }
+                    }
+                } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                    Console.WriteLine("Error at : " + tokens[index].lineNo + "private attribute or function cant be accessed outside the class");
+                    Environment.Exit(0);
+                } else {
+                    exp.setT(c.type);
+                }
+
+            }
+            if (O_(exp)) {
+                return true;
+            }
+        } 
+        else if (
+            tokens[index].class_Part == TokenType.MDM 
+        || tokens[index].class_Part == TokenType.COM 
+        || tokens[index].class_Part == TokenType.COMP 
+        || tokens[index].class_Part == TokenType.CRB
+        || tokens[index].class_Part == TokenType.CCB 
+        || tokens[index].class_Part == TokenType.CSB 
+        || tokens[index].class_Part == TokenType.SEC 
+        || tokens[index].class_Part == TokenType.PM) 
+        {
+            if (exp.getR().Equals("")) {
+                String t = se.lookUpFuncTable(exp.name);
+                if (t != null) {
+                    exp.setT(t);
+                } else {
+                    SE_Main_Data_Table? m = se.lookUpMainTable(exp.name);
+                    if (m != null) {
+                        if (m.tm == null || !m.tm.Equals("static")) {
+                            Console.WriteLine("Error at : " + tokens[index].lineNo + " variable should be static");
+                            Environment.Exit(0);
+                        }
+                        exp.setR(m.name);
+                    } else {
+                        Console.WriteLine("Error at " + tokens[index].lineNo + ": Variable not declare ");
+                        Environment.Exit(0);
+                    }
+                }
+
+            } else if (exp.getR().Equals("self")) {
+                SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, se.curr_class_name);
+                if (c != null) {
+
+                    exp.setT(c.type);
+
+                } else {
+                    Console.WriteLine("Error at " + tokens[index].lineNo + ": Variable not declare ");
+                    Environment.Exit(0);
+                }
+                
+            } else if (exp.getR().Equals("super")) {
+                SE_Main_Data_Table? m = se.lookUpMainTable(se.curr_class_name);
+                if (m.extends == null || m.extends.Equals("")) {
+                    Console.WriteLine("Current Class does not have parent class");
+                    Environment.Exit(0);
+                } else {
+                    SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, m.extends);
+                    if (c != null) {
+
+                        exp.setT(c.type);
+
+                    } else {
+                        Console.WriteLine("Error at " + tokens[index].lineNo + ": Variable not declare ");
+                        Environment.Exit(0);
+                    }
+                }
+            } else if (exp.getR().Equals("int") 
+            || exp.getR().Equals("float") 
+            || exp.getR().Equals("char")
+            || exp.getR().Equals("String") 
+            || exp.getR().Equals("bool")) 
+            {
+                Console.WriteLine("Error at " + tokens[index].lineNo + "Primitive data Type cant be instantiated");
+                Environment.Exit(0);
+            } else if (exp.getR().Equals("void")) {
+                Console.WriteLine("Error at " + tokens[index].lineNo + "Return type is void");
+                Environment.Exit(0);
+            } else {
+                SE_Class_Data_Table? c = se.lookUpDataTable(exp.name, exp.getR());
+                if (c == null) {
+                    while (true) {
+                        SE_Main_Data_Table? m = se.lookUpMainTable(exp.getR());
+                        if (m == null) {
+                            Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                            Environment.Exit(0);
+                        } else if (m.extends == null || m.extends.Equals("")) {
+                            Console.WriteLine("Error at " + tokens[index].lineNo + " :Undeclared");
+                            Environment.Exit(0);
+                        } else {
+                            c = se.lookUpDataTable(exp.name, m.extends);
+                            if (c == null) {
+                                exp.setR(m.extends);
+                            } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                                Console.WriteLine("Error at : " + tokens[index].lineNo + "private attribute or function cant be accessed outside the class");
+                                Environment.Exit(0);
+                            } else {
+                                exp.setT(c.type);
+                                break;
+                            }
+
+                        }
+                    }
+                } else if (c.am.Equals("local") && !c.name.Equals(se.curr_class_name)) {
+                    Console.WriteLine("Error at : " + tokens[index].lineNo + "private attribute or function cant be accessed outside the class");
+                    Environment.Exit(0);
+                } else {
+                    exp.setT(c.type);
+                }
+
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     bool secheck()
     {
         printPTokens();
@@ -216,24 +801,35 @@ public class Syntax_Analyzer
     private string getExpType(int i, int j)
     {
         string type = "", name = "";
-        if (ptokens[i].class_Part == TokenType.CREATE)
+
+        for (; i <= j; i++)
         {
-            name = ptokens[i + 1].word;
-            i = i + 3;
-            // modify this when exp is done
-            for (; i < j - 2; i++)
+            if (ptokens[i].class_Part == TokenType.CREATE)
             {
-                type += ptokens[i].word;
+                //  create person(a+1 ,' b*c)
+                //  arr[a*b ]' ;
+                name = ptokens[i + 1].word;
+                i = i + 3;
+                // in recurssion below for loop code wil be switchecd with a recursive call.
+                // now we will face error to get value of j so we make a loop till to get thge value of j
+                // modify this when exp is done
+                for (; i < j - 2; i++)
+                {
+                    type += ptokens[i].word;
+                }
+                SE_Main_Data_Table? mt = se.lookUpMainTable(name);
+                if (mt == null) { System.Console.WriteLine("\nNo refference found for: " + name + " on lineNo: " + ptokens[i - 1].lineNo); Environment.Exit(0); }
+
+                else if (!mt.cdt.ContainsKey(name + ":" + type)) { System.Console.WriteLine("\nNo constructor found for: " + name + " on lineNo: " + ptokens[i - 1].lineNo); Environment.Exit(0); }
+
+                return name;
             }
-            SE_Main_Data_Table? mt = se.lookUpMainTable(name);
-            if (mt == null) { System.Console.WriteLine("\nNo refference found for: " + name + " on lineNo: " + ptokens[i - 1].lineNo); Environment.Exit(0); }
 
-            else if (!mt.cdt.ContainsKey(name + ":" + type)) { System.Console.WriteLine("\nNo constructor found for: " + name + " on lineNo: " + ptokens[i - 1].lineNo); Environment.Exit(0); }
 
-            return name;
         }
+
         // if (ptokens[i].class_Part == TokenType.OCB)
-        // {
+        // {          
         //     name = ptokens[i + 1].word;
         //     i = i + 3;
         //     // modify this when exp is done

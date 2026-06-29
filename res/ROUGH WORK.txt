@@ -51,6 +51,7 @@ GETTYPE(STRING STR){
 
 }
 
+int a = id.fn(a+1);
 
 
 

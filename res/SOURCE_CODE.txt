@@ -377,7 +377,6 @@ int a = SC;
 string const s= SC;
 int a=b=c;
 int a = arr[0];
-
 int a[] = {2,3,4}
 int a[][] = {{2,3},{4}}
 int a[][] = int [2][3]
@@ -386,7 +385,6 @@ int a[] , b[];
 int x=4 , z=5;
 int y = d = g = 0 ;
 
-
 #CLASS_DECLARATION
 global int arr []= int [2];
 global int a = SC;
@@ -394,18 +392,40 @@ global const  string s= SC;
 global const  string s= SC;
 global static const string s = SC;
 
-
 Array declaration syntax
 
 int arr[] = {exp,exp,exp,exp};           -> int[]
-
 int a[][] = {{exp,exp},{},{}};           -> int[][]
-
 int arr[] = int [exp];                   -> int[]
-
 int arr[][] = int [exp] [exp];           -> int[][]
 
+getExpType(int start, int end)
+
 $
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 int a[][] = {{5,5},{5}};
 
